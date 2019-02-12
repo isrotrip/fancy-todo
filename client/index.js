@@ -1,12 +1,12 @@
 const url = `http://localhost:3000`;
 let user = {};
 let allToDoList = [];
-let filteredList = [];
+let sortedList = [];
 
 let updateId = '';
 let currentList = '';
 let updateOrDeleteId = '';
-let currentFilter = '';
+let currentSorted = '';
 
 navBar();
 isSignIn();
@@ -243,7 +243,7 @@ function signUp() {
  
 async function readTodo(){
   return $.ajax({
-    url:`${url}/todo/read`,
+    url:`${url}/todo`,
     method:'GET',
     headers: {
       token: localStorage.getItem('token'),
@@ -252,7 +252,7 @@ async function readTodo(){
   })
   .done(response => {
     allToDoList = response;
-    filteredList = allToDoList.slice(0);
+    sortedList = allToDoList.slice(0);
     showToDoForm();
     return true;
   })
@@ -312,13 +312,13 @@ function showToDoForm() {
           </div>
         </div>
       </div>
-      <div id="filterList">
+      <div id="sortList">
         <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
           <div class="card card-signin my-5">
             <div class="card-body">
-              <h5 class="card-title text-center">Filter Own To Do</h5>
-              <form id="filter-own-form-todo" class="form-signin" onsubmit="filterToDo()">
-                <select id="filter-own-option" class="form-control select-filter" name="filter-own-todo">
+              <h5 class="card-title text-center">Sorted Own To Do</h5>
+              <form id="sort-own-form-todo" class="form-signin" onsubmit="sortToDo()">
+                <select id="sort-own-option" class="form-control select-sort" name="sort-own-todo">
                   <option value="newUpdated">New Updated</option>
                   <option value="dueDateAsc">Due Date Ascending</option>
                   <option value="dueDateDesc">Due Date Descending</option>
@@ -326,8 +326,9 @@ function showToDoForm() {
                   <option value="uncomplete">Uncomplete</option>
                   <option value="nameAsc">Name Ascending</option>
                   <option value="nameDesc">Name Descending</option>
-                </select> 
-                <button class="btn btn-lg btn-success btn-block text-uppercase" type="submit">Filter</button>
+                </select>
+                <br> 
+                <button class="btn btn-lg btn-success btn-block text-uppercase" type="submit">Sort</button>
             </div>
           </div>
         </div>
@@ -339,13 +340,13 @@ function showToDoForm() {
   $('#form-todo').on('submit', function(event){
     event.preventDefault();
   })
-  $('#filter-own-form-todo').on('submit', function(event){
+  $('#sort-own-form-todo').on('submit', function(event){
     event.preventDefault();
   })
   appendTodo();
 }
 
-function appendTodo(list = filteredList){
+function appendTodo(list = sortedList){
   $('#allToDoList').remove();
   $('#todoList').append('<div id="allToDoList"></div>');
   for(let i = list.length - 1; i >= 0 ; i--){
@@ -383,7 +384,7 @@ function appendTodo(list = filteredList){
 
 function createTodo() {
   $.ajax({
-    url:`${url}/todo/create`,
+    url:`${url}/todo`,
     method:'POST',
     data: {
       name: $('#todoName').val(),
@@ -398,7 +399,7 @@ function createTodo() {
   })
   .done(response => {
     notif('top-end', 'success', 'To Do Added to the List');
-    filteredList.push(response);
+    sortedList.push(response);
     allToDoList.push(response)
     
     showToDoForm();
@@ -470,10 +471,9 @@ function update(index){
     event.preventDefault();
   })
   $.ajax({
-    url: `${url}/todo/update`,
-    method:'POST',
+    url: `${url}/todo/${updateId}`,
+    method:'PUT',
     data: {
-      id: updateId,
       name: $('#updateName').val(),
       description: $('#updateDescription').val(),
       status: $("input[name='optCreateStatus']:checked").val(),
@@ -486,8 +486,8 @@ function update(index){
   })
   .done(response => {
     notif('top-end', 'success', 'List Have Been Update');
-    filteredList.splice(index, 1);
-    filteredList.push(response);
+    sortedList.splice(index, 1);
+    sortedList.push(response);
     allToDoList.splice(allToDoList.map(list => list._id).indexOf(updateId), 1);
     allToDoList.push(response);
 
@@ -540,11 +540,8 @@ function remove(index){
     event.preventDefault();
   })
   $.ajax({
-    url: `${url}/todo/delete`,
-    method:'POST',
-    data: {
-      id: updateId
-    },
+    url: `${url}/todo/${updateId}`,
+    method:'DELETE',
     headers: {
       token: localStorage.getItem('token'),
       userId: user._id
@@ -552,7 +549,7 @@ function remove(index){
   })
   .done(response => {
     notif('top-end', 'success', response);
-    filteredList.splice(index, 1);
+    sortedList.splice(index, 1);
     allToDoList.splice(allToDoList.map(list => list._id).indexOf(updateId), 1);
     appendTodo();
   })
@@ -562,43 +559,43 @@ function remove(index){
 }
 
 function searchToDo(){
-  const filteredToDo = allToDoList.filter(todo => (todo.name.indexOf($('#input-search').val()) + 1));
-  if(filteredToDo.length){
-    appendTodo(filteredToDo);
+  const searchedToDo = allToDoList.filter(todo => (todo.name.indexOf($('#input-search').val()) + 1));
+  if(searchedToDo.length){
+    appendTodo(searchedToDo);
     notif('top-start', 'success', 'To Do Found');
   } else {
     notif('top-start', 'error', "To Do Didn't Found")
   }
 }
 
-function filterToDo(){
-  const option = $('#filter-own-option').val();
-  currentFilter = currentFilter || 'newUpdated';
+function sortToDo(){
+  const option = $('#sort-own-option').val();
+  currentSorted = currentSorted || 'newUpdated';
 
   
-  if(currentFilter !== option){
-    currentFilter = option;
+  if(currentSorted !== option){
+    currentSorted = option;
     if(option === 'newUpdated'){
-      filteredList = allToDoList.slice(0);
+      sortedList = allToDoList.slice(0);
       
     } else if(option === 'dueDateAsc'){
-      filteredList = filteredList.sort((listA, listB) => listA.dueDate < listB.dueDate);
+      sortedList = sortedList.sort((listA, listB) => listA.dueDate < listB.dueDate);
     } else if(option === 'dueDateDesc'){
-      filteredList = filteredList.sort((listA, listB) => listB.dueDate < listA.dueDate);
+      sortedList = sortedList.sort((listA, listB) => listB.dueDate < listA.dueDate);
     } else if(option === 'complete'){
-      filteredList = filteredList.sort((listA, listB) => listA.status < listB.status);
+      sortedList = sortedList.sort((listA, listB) => listA.status < listB.status);
     } else if(option === 'uncomplete'){
-      filteredList = filteredList.sort((listA, listB) => listB.status < listA.status);
+      sortedList = sortedList.sort((listA, listB) => listB.status < listA.status);
     } else if(option === 'nameAsc'){
-      filteredList = filteredList.sort((listA, listB) => listA.name < listB.name);
+      sortedList = sortedList.sort((listA, listB) => listA.name < listB.name);
     } else if(option === 'nameDesc'){
-      filteredList = filteredList.sort((listA, listB) => listB.name < listA.name);
+      sortedList = sortedList.sort((listA, listB) => listB.name < listA.name);
     }
     appendTodo();
-    notif('top-end', 'success', 'Filtered Own List Success');
+    notif('top-end', 'success', 'Sorted Own List Success');
   }
   else{
-    notif('top-end', 'error', 'The List Have Been Already Filtered');
+    notif('top-end', 'error', 'The List Have Been Already Sorted');
   }
 
 }
