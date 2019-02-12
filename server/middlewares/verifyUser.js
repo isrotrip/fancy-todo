@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const getJWT = require('./getJWT.js');
+const getJWT = require('../helpers/getJWT.js');
 
 const User = require('../models/user.js');
 const Todo = require('../models/todo.js');
@@ -10,7 +10,7 @@ module.exports = {
     const {data} = getJWT(req.headers.token, 'verify');
     return Todo
       .findOne({
-        _id: req.body.id
+        _id: req.params.id
       })  
       .then(todo => {
         if (todo.userId != data._id) {

@@ -38,7 +38,7 @@ class TodoController {
   static update(req, res){
     Todo
       .findOne({
-        _id: req.body.id
+        _id: req.params.id
       })
       .then(todo => {
         if(todo) {
@@ -61,7 +61,7 @@ class TodoController {
   static delete(req, res){
     Todo
       .findOne({
-        _id: req.body.id
+        _id: req.params.id
       })
       .then(todo => {
         if(todo) {

@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const verifyUser = require('./middlewares/verifyUser.js');
 
 //routes
 const userRoute = require('./routes/userRoute.js');
@@ -18,6 +19,7 @@ app.use(express.urlencoded({extended: false}));
 
 //routing
 app.use('/user', userRoute);
+app.use(verifyUser.authentication);
 app.use('/todo', todoRoute);
 
 app.listen(port, () => {
